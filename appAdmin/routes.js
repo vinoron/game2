@@ -47,7 +47,7 @@ export default (components = {}) => [
   },
   {
     path: '/admin/create-template',
-    exact: true,  
+    exact: true,
     component: components.PCreateTemplate,
     filters: [isLoggedAsAdmin(signInPage, playerRootPage)]
   },
@@ -57,16 +57,10 @@ export default (components = {}) => [
     component: components.PCreateTemplate,
     filters: [isLoggedAsAdmin(signInPage, playerRootPage)]
   },
-  // {
-  //   path: '/admin/past-games',
-  //   exact: true,
-  //   component: components.PPastAdminGames,
-  //   filters: [filters.isLoggedIn(signInPage)]
-  // },
-  // {
-  //   path: '/auth/sign-up',
-  //   exact: true,
-  //   component: components.PHighscores
-  //   // filters: [filters.isLoggedIn(signInPage)]
-  // }
+  {
+    path: '/admin/past-games',
+    exact: true,
+    component: components.PPastAdminGames,
+    filters: [isLoggedAsAdmin(signInPage, playerRootPage)]
+  }
 ]
