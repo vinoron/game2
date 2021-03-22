@@ -35,7 +35,7 @@ const Chat = ({ id }) => {
     Div.root
       Div.messages
         each message in chat.messages
-          Div.message
+          Div.message(key=message.id)
             - const messageUser = playersById[message.userId]
             Span.author #{messageUser.firstName} #{messageUser.lastName}#{': '}
             Span.text #{message.message}

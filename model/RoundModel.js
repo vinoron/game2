@@ -1,84 +1,83 @@
 import { BaseModel } from 'startupjs/orm'
+import _ from 'lodash'
+
+const calcEquation = (equation, answersSource, players, rounds, currentRoundIndex) => {
+  // prepare template format data
+  const answers = []
+  players.forEach((p, playerIndex) => {
+    answersSource[p.userId].forEach((a, answerIndex) => {
+      if (!answers[answerIndex]) {
+        answers[answerIndex] = {}
+      }
+      answers[answerIndex][p.role] = a
+    })
+  })
+  let result = []
+  try {
+    eval(equation)
+  } catch (err) {
+    console.log('=====EQUATION EVAL ERROR=====')
+    console.log(err.message)
+  }
+  return result
+}
 export default class RoundModel extends BaseModel {
-  async createByFirstMove (id, gameId, userId, enemyId, type) {
-    const obj = this.scope(`${this.getCollection()}.${id}`)
-    await obj.createAsync({
-      gameId: gameId,
+  async create (gameId, groupIndex, players) {
+    await this.createAsync({
+      gameId,
+      groupIndex,
       createdAt: Date.now(),
       finishedAt: null,
       finished: false,
-      players: {
-        [userId]: { type },
-        [enemyId]: {}
-      },
-      winner: '',
-      comboFor: '',
-      comboValue: 0
+      players,
+      movedPlayers: [],
+      answers: {},
+      scores: {}
     })
   }
 
-  async setSecondMove (id, userId, enemyId, type, previousRoundId) {
-    const $previousRound = this.scope(`${this.getCollection()}.${previousRoundId}`)
-    await this.fetchAsync($previousRound)
-    const previousRound = $previousRound.get()
-    const $round = this.scope(`${this.getCollection()}.${id}`)
+  async saveToRound (roundId, templateStr, userId, answers, rounds, currentRoundIndex) {
+    const $round = this.scope(`${this.getCollection()}.${roundId}`)
     await this.fetchAsync($round)
     const round = $round.get()
-    round.players[userId] = { type }
-    round.finished = true
-    round.finishedAt = Date.now()
-
-    const enemyMove = round.players[enemyId].type
-    let winner = ''
-    if (type !== enemyMove) {
-      switch (type) {
-        case 'C':
-          winner = enemyId
-          break
-        case 'V':
-          winner = enemyMove === 'I' ? userId : enemyId
-          break
-        case 'O':
-          winner = enemyMove === 'V' ? userId : enemyId
-          break
-        case 'I':
-          winner = enemyMove === 'O' ? userId : enemyId
-          break
+    const movedPlayers = _.uniq([...round.movedPlayers, userId])
+    const changedRoundValues = {
+      answers: { ...round.answers, [userId]: answers },
+      movedPlayers: movedPlayers
+    }
+    if (movedPlayers.length === round.players.length) {
+      changedRoundValues.finished = true
+      changedRoundValues.finishedAt = Date.now()
+      try {
+        const templateData = JSON.parse(templateStr)
+        const result = calcEquation(templateData.equation, changedRoundValues.answers, round.players, rounds, currentRoundIndex)
+        changedRoundValues.scores = {}
+        result.forEach((res, resIndex) => {
+          const userId = round.players[resIndex].userId
+          console.debug('res userId', userId)
+          const lastScoreAll = currentRoundIndex > 0 ? rounds[currentRoundIndex - 1].scores[userId].scoreAll : 0
+          // todo add additional equation to calc scoreAll?
+          changedRoundValues.scores[userId] = { score: res, scoreAll: lastScoreAll + res }
+        })
+      } catch (err) {
+        console.log('=====EQUATION PARSE ERROR=====')
+        console.log(err.message)
       }
     }
+    console.debug('changedRoundValues', changedRoundValues)
+    return $round.setEachAsync(changedRoundValues)
+  }
 
-    const isDraw = winner === ''
-    const previousComboFor = previousRound ? previousRound.comboFor : ''
-    const previousComboValue = previousRound ? previousRound.comboValue : 0
-    const isCombo = previousComboFor === winner
-
-    let winnerScore = 0
-    if (winner) {
-      if (!previousRound || (previousRound && previousRound.winner !== winner) ) {
-        winnerScore = 1
-      }
-      if (isCombo) {
-        winnerScore = previousComboValue
-      }
+  async cancelSaveToRound (roundId, userId) {
+    const $round = this.scope(`${this.getCollection()}.${roundId}`)
+    await this.fetchAsync($round)
+    const round = $round.get()
+    delete round.answers[userId]
+    const movedPlayers = _.without(round.movedPlayers, userId)
+    const changedRoundValues = {
+      answers: round.answers,
+      movedPlayers: movedPlayers
     }
-
-    round.winner = winner
-    round.comboFor = isDraw ? previousComboFor : winner
-
-    const userScore = userId === winner ? winnerScore : 0
-    const userScoreAll = previousRound ? previousRound.players[userId].scoreAll + userScore : userScore
-    round.players[userId].score = userScore
-    round.players[userId].scoreAll = userScoreAll
-
-    const enemyScore = enemyId === winner ? winnerScore : 0
-    const enemyScoreAll = previousRound ? previousRound.players[enemyId].scoreAll + enemyScore : enemyScore
-    round.players[enemyId].score = enemyScore
-    round.players[enemyId].scoreAll = enemyScoreAll
-
-    round.comboValue = isDraw ? previousComboValue : (winner === userId ? userScoreAll : enemyScoreAll)
-
-    return $round.setEachAsync('', {
-      ...round
-    })
+    return $round.setEachAsync(changedRoundValues)
   }
 }

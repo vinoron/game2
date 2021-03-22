@@ -21,14 +21,17 @@
 
 .gameInfo
   margin-top 1u
-  width 400px
+  width 600px
   border-top 1px solid $color-gray
   border-right 1px solid $color-gray
 
-.row
+.row, .row3
   display grid
   grid-template-columns 1fr 1fr
   border-bottom 1px solid $color-gray
+
+.row3
+  grid-template-columns 1fr 1fr 1fr
 
 .cell, .headcell
   padding 1u
@@ -55,3 +58,13 @@
 
 .warning
   color $color-red
+
+.button
+  margin-top 3u
+  width 110px
+  cursor pointer
+  border 1px solid $color-black
+  border-radius 0
+
+.chat
+  margin-top 2u

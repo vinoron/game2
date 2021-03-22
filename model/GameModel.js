@@ -13,7 +13,6 @@ export default class GameModel extends BaseModel {
       createdAt: Date.now(),
       groups: [],
       players: [],
-      rounds: [],
       results: [],
       startedAt: null,
       finishedAt: null,

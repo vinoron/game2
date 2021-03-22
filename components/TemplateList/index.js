@@ -60,7 +60,7 @@ const TemplateList = ({ history }) => {
           Div.cell Description
           Div.cell
         each template in templates
-          Div.row
+          Div.row(key=template.id)
             Div.cell
               Span #{template.name}
               Button(onClick=(goEdit(template.id))) #{'EDIT TEMPLATE'}

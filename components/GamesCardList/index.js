@@ -52,7 +52,7 @@ const GamesCardList = ({ templateId }) => {
             Div.cell
               Span #{'Description'}
           each game, index in games
-            Div.row
+            Div.row(key=game.id)
               Div.cell #{skip + index + 1}
               Div.cell
                 Span #{game.name}

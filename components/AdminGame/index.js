@@ -7,71 +7,52 @@ import uuid from 'uuid'
 import { faHandRock, faHandScissors, faHandPaper, faRunning } from '@fortawesome/free-solid-svg-icons'
 import { BASE_URL } from '@env'
 
-import { GAMES_COLLECTION, ROUNDS_COLLECTION, CHAT_COLLECTION } from '../../const/default'
+import { GAMES_COLLECTION, PLAYERS_COLLECTION, ROUNDS_COLLECTION, TEMPLATES_COLLECTION, CHAT_COLLECTION } from '../../const/default'
 
 import './index.styl'
 
 const AdminGame = ({ match: { params }, history }) => {
   const [skip, $skip] = useValue(0)
-  const [trigger, $trigger] = useValue({})
   const [userId] = useLocal('_session.userId')
   const [alertMessage, $alertMessage] = useValue('')
 
-  const [game, $game] = useValue()
-  const [players, $players] = useValue([])
-  const [template, $template] = useValue({})
-  const [roundId, $roundId] = useValue()
-  const [loading, $loading] = useValue(false)
-
-  useEffect(() => {
-    $loading.set(true)
-    const $obj = model.scope(`${GAMES_COLLECTION}.${params.id}`)
-    console.debug(`${GAMES_COLLECTION}.${params.id}`)
-    $obj.fetchGame().then(({ data, template, players, roundId }) => {
-      $game.set(data)
-      $players.set(players)
-      $template.set(template)
-      $roundId.set(roundId)
-    }).catch(e => {
-      console.debug('err', e)
-    }).finally(() => {
-      $loading.set(false)
-    })
-  }, [skip])
-
+  // GAME DATA
   const [gameObj, $gameObj] = useDoc(GAMES_COLLECTION, params.id)
-  const [round, $round] = useDoc(ROUNDS_COLLECTION, roundId)
-  const [currentRoundIndex, $currentRoundIndex] = useValue(game && (gameObj.rounds.length - 1))
+
+  // PLAYERS
+  const query = { _id: { $in: gameObj.players } }
+  const [players] = useQuery(PLAYERS_COLLECTION, query)
+
+  // TEMPLATE
+  const [template] = useDoc(TEMPLATES_COLLECTION, gameObj.templateId)
 
   const gameStarted = gameObj.startedAt > 0
   const gameGrouped = gameObj.groupedAt > 0
   const gameFinished = gameObj.finishedAt > 0
 
-//const $game = model.scope(`${GAMES_COLLECTION}.${gameId}`)
-//await $game.finish()
-
-  if (loading) {
+  if (!gameObj) {
     return pug`
-      Div.gameStatus #{'LOADING...'}
-    `
-  }
-  if (!game) {
-    return pug`
-      Div.gameStatus #{'GAME NOT FOUND'}
+      Span.gameStatus #{'GAME NOT FOUND'}
     `
   }
 
   const onFormGroups = async () => {
-    if (game.startedAt > 0) {
+    if (gameObj.startedAt > 0) {
       $alertMessage.set('Game already started, cannot form groups')
       return
     }
-    if (game.players.length > 0) {
+    if (gameObj.players.length > 0) {
       const groups = []
+      let templateData = {}
       console.debug('templateData', template)
-      const templateData = JSON.parse(template.template)
+      try {
+        templateData = JSON.parse(template.template)
+      } catch (e) {
+        $alertMessage.set(`WRONG TEMPLATE, JSON ERROR ${e.message}`)
+      }
+      if (!templateData.rounds) return
 
-      if (templateData.roles.length > game.players.length) {
+      if (templateData.roles.length > gameObj.players.length) {
         $alertMessage.set(`You need at least ${templateData.roles.length} users to create a group`)
         return
       }
@@ -80,7 +61,7 @@ const AdminGame = ({ match: { params }, history }) => {
       let group = {}
       let groupPlayers = []
       let roleIndex = 0
-      game.players.forEach(userId => {
+      gameObj.players.forEach(userId => {
         groupPlayers.push({ userId, role: templateData.roles[roleIndex] })
         roleIndex++
         console.debug('group.players.length', groupPlayers.length, rolesCount)
@@ -95,31 +76,32 @@ const AdminGame = ({ match: { params }, history }) => {
       if (groupPlayers.length > 0) {
         // rejoin rest users
         console.debug('drop users', groupPlayers)
-        $gameObj.setEach({ players: game.players.filter(p => !groupPlayers.find(item => item.userId === p)) })
+        $gameObj.setEach({ players: gameObj.players.filter(p => !groupPlayers.find(item => item.userId === p)) })
       }
 
       // create chatrooms for groups
-      const groupsWithChatId = await Promise.all(groups.map(async (g) => {
+      const groupsWithChatIdAndRounds = await Promise.all(groups.map(async (g, groupIndex) => {
         const chatId = uuid()
         const $chat = model.scope(`${CHAT_COLLECTION}.${chatId}`)
         await $chat.create(g.players)
-        return { ...g, chatId }
-      }))
 
-      $gameObj.setEach({ groups: groupsWithChatId, groupedAt: Date.now() })
-      $trigger.set({})
+        const rounds = [...Array(templateData.rounds).keys()]
+        const roundIds = await Promise.all(rounds.map(async (r) => {
+          const roundId = uuid()
+          const $round = model.scope(`${ROUNDS_COLLECTION}.${roundId}`)
+          await $round.create(gameObj.id, groupIndex, g.players)
+          return roundId
+        }))
+        return { ...g, chatId, rounds: roundIds }
+      }))
+      $gameObj.setEach({ groups: groupsWithChatIdAndRounds, groupedAt: Date.now() })
     } else {
       $alertMessage.set('No any users to grouping')
     }
   }
 
-  const onStartGame = () => {
+  const onStartGame = async () => {
     $gameObj.setEach({ startedAt: Date.now() })
-    $trigger.set({})
-  }
-
-  const onNextRound = () => {
-    $currentRoundIndex.set(currentRoundIndex + 1)
   }
 
   return pug`
@@ -127,11 +109,11 @@ const AdminGame = ({ match: { params }, history }) => {
       Div.game
         if (alertMessage)
           Span.warning #{alertMessage}
-        if (!game)
-          Div.gameStatus #{'GAME NOT FOUND'}
+        if (!gameObj)
+          Span.gameStatus #{'GAME NOT FOUND'}
         else 
           if (gameFinished)
-            Div.gameStatus #{'GAME FINISHED'}
+            Span.gameStatus #{'GAME FINISHED'}
           else
             if (!gameGrouped)
               Button(onClick=onFormGroups variant='flat') #{'Form groups'}
@@ -139,35 +121,29 @@ const AdminGame = ({ match: { params }, history }) => {
               if (!gameStarted)
                 Button(onClick=onStartGame variant='flat') #{'Start game'}
               else
-                Div.gameStatus #{'GAME STARTED!'}
-                Div.gameInfo
-                  Div.row
-                    Div.headcell #{'Round'}
-                    Div.cell #{currentRoundIndex + 1}
-                  if (round && round.finished)
-                    Button.type(onClick=onNextRound) #{'NEXT'}
+                Span.gameStatus #{'GAME STARTED!'}
         Div.gameInfo
           Div.row
-            Div.headcell #{'Game Name'}
-            Div.cell #{game.name}
+            Span.headcell #{'Game Name'}
+            Span.cell #{gameObj.name}
           Div.row
-            Div.headcell #{'Game Author'}
-            Div.cell #{game.creatorName}
+            Span.headcell #{'Game Author'}
+            Span.cell #{gameObj.creatorName}
           Div.row
-            Div.headcell #{'Joined players'}
+            Span.headcell #{'Joined players'}
             Div.cell
               if (gameGrouped)
                 each group, groupIndex in gameObj.groups
-                  Div.row
+                  Div.row(key=groupIndex)
                     Div.cell
                       Span #{'Group #'} #{groupIndex+1}
                       each playerData, playerIndex in group.players
-                        Div
+                        Div(key=playerData.userId)
                           - const player = players.find(p => p.id === playerData.userId)
                           Span #{playerIndex+1} #{player.firstName} #{player.lastName} (#{playerData.role})
               else
                 each player in players
-                  Div.row
+                  Div.row(key=player.id)
                     Span.cell #{player.firstName} #{player.lastName}
   `
 }

@@ -7,13 +7,21 @@ import { TEMPLATES_COLLECTION } from '../../const/default'
 import './index.styl'
 
 const exampleTemplate = {
-  roles: ['boss', 'emploee', 'HR manager'],
-  rounds: 5,
-  questions: [
-    { title: 'Сколько нужно новых сотрудников', type: 'number', roles: ['boss'], equation: '' },
-    { title: 'Сколько собеседований провел в день', type: 'number', roles: ['HR manager'], equation: '' },
-    { title: 'Сколько канализационных люков в городе', type: 'number', roles: ['emploee'], equation: '' }
-  ]
+  "roles": [
+      "A",
+      "B"
+  ],
+  "rounds": 2,
+  "questions": [
+      {
+          "title": "Сотрудничать?",
+          "type": "enum",
+          "values": [["Да", 1],["Нет", 0]],
+          "roles": [
+          ]
+      }
+  ],
+ "equation": "const D=10; const C=2; const d=0.5; const c=0; if (answers[0]['A'] && answers[0]['B']) result = [C, C];  if (!answers[0]['A'] && answers[0]['B']) result = [D, c];  if (answers[0]['A'] && !answers[0]['B']) result = [c, D];  if (!answers[0]['A'] && !answers[0]['B']) result = [d, d];"
 }
 
 const CreateTemplateForm = ({ match: { params }, history }) => {
@@ -43,7 +51,7 @@ const CreateTemplateForm = ({ match: { params }, history }) => {
       TextInput.input(placeholder='Template description' onChangeText=onSetFormValue('description') value=formData.description)
       TextInput.input(placeholder='Template' multiline numberOfLines=10 onChangeText=onSetFormValue('template') value=formData.template)
       Div
-        Span #{'Example'}
+        Span #{'Example PRISONER\'s GAME '}
       TextInput.input(multiline numberOfLines=5 readonly value=JSON.stringify(exampleTemplate, null, 4))
       Div.footer
         Button.button(onClick=onSave) #{params.templateId ? 'UPDATE' : 'CREATE'}

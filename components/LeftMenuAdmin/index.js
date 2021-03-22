@@ -1,5 +1,5 @@
 import React from 'react'
-import { Div, Menu, Link } from '@startupjs/ui'
+import { Div, Menu, Link, Span } from '@startupjs/ui'
 import { onLogout } from '@startupjs/auth'
 
 import './index.styl'
@@ -19,7 +19,7 @@ const LeftMenuAdmin = () => {
           MenuItem.mi(key=index)
             Link.m(to=item.url) #{item.title}
         MenuItem.mi
-          Link.m(onPress=onLogout) #{'Logout'}
+          Span.m(onPress=onLogout) #{'Logout'}
 
     `
 }

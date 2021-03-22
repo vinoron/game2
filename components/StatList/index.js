@@ -68,7 +68,7 @@ const StatList = ({ gameId }) => {
             Div.cell #{players[1].name}
             Div.cell Total
           each round, index in rounds
-            Div.row
+            Div.row(key=round.id)
               Div.cell #{skip + index + 1}
               Div.cell #{renderType(round.players[players[0].id].type)}
                 Span.score #{round.players[players[0].id].score}

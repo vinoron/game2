@@ -82,7 +82,7 @@ const GameList = ({ mode = 'user', active = true, history }) => {
           if (mode === 'user')
             Div.gameJoin
         each game in games
-          Div.row
+          Div.row(key=game.id)
             Div.cell #{game.name}
             Div.cell #{moment(game.createdAt).format('MMMM Do YYYY, h:mm:ss a')}
             if (active)
