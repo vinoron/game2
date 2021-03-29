@@ -2,17 +2,16 @@ import React, { useEffect } from 'react'
 import { withRouter } from 'react-router'
 import { Div, Span, Row, Pagination } from '@startupjs/ui'
 import { observer, useValue, model } from '@startupjs/react-sharedb'
-import { faHandRock, faHandScissors, faHandPaper, faRunning } from '@fortawesome/free-solid-svg-icons'
 
+import GameScores from 'components/GameScores'
 import { GAMES_COLLECTION } from '../../const/default'
-
 import './index.styl'
 
-const StatList = ({ gameId }) => {
+const StatList = ({ gameId, userId = null }) => {
   let [skip, $skip] = useValue(0)
   let [pages, $skips] = useValue(0)
   let [limit, $limit] = useValue(0)
-  let [game, $game] = useValue({})
+  let [groups, $groups] = useValue([])
   let [rounds, $rounds] = useValue([])
   let [players, $players] = useValue([])
   let [loading, $loading] = useValue(false)
@@ -20,8 +19,8 @@ const StatList = ({ gameId }) => {
   useEffect(() => {
     $loading.set(true)
     const $obj = model.scope(`${GAMES_COLLECTION}.${gameId}`)
-    $obj.fetchStat(skip).then(({ data, rounds, players, roundCount, limit }) => {
-      $game.set(data)
+    $obj.fetchStat(skip, userId).then(({ groupsData, rounds, players, roundCount, limit }) => {
+      $groups.set(groupsData)
       $players.set(players)
       $rounds.set(rounds)
       $limit.set(limit)
@@ -35,46 +34,18 @@ const StatList = ({ gameId }) => {
     $skip.set(val * limit)
   }
 
-  const renderType = type => {
-    const map = {
-      O: pug` Icon(icon=faHandRock)`,
-      V: pug` Icon(icon=faHandScissors)`,
-      I: pug` Icon(icon=faHandPaper)`,
-      C: pug` Icon(icon=faRunning)`
-    }
-    return map[type]
-  }
-
   return pug`
     Div.root
       if (loading)
         Span #{'Loading...'}
       if (players.length)
         Div.results
-          Div.row
-            Div.cell Player 1:
-            Div.cell #{players[0].name}
-            Div.cell #{game.results[players[0].id]}
-          Div.row
-            Div.cell Player 2:
-            Div.cell #{players[1].name}
-            Div.cell #{game.results[players[1].id]}
+          each group, groupIndex in groups
+            if (!userId)
+              Span #{'Group#'} #{groupIndex + 1}
+            GameScores(key=group.id rounds=rounds.filter(r => group.rounds.includes(r.id)), roundNumberOffset=skip players=players)
         Row.pagination
           Pagination(pages=pages limit=limit $skip=$skip onChangePage=onChangePage)
-        Row.deka
-          Div.row
-            Div.cell #{'#'}
-            Div.cell #{players[0].name}
-            Div.cell #{players[1].name}
-            Div.cell Total
-          each round, index in rounds
-            Div.row(key=round.id)
-              Div.cell #{skip + index + 1}
-              Div.cell #{renderType(round.players[players[0].id].type)}
-                Span.score #{round.players[players[0].id].score}
-              Div.cell #{renderType(round.players[players[1].id].type)}
-                Span.score #{round.players[players[1].id].score}
-              Div.cell #{round.players[players[0].id].scoreAll} #{'-'} #{round.players[players[1].id].scoreAll}
   `
 }
 export default withRouter(observer(StatList))

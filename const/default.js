@@ -5,4 +5,4 @@ export const PLAYERS_COLLECTION = 'users'
 export const CHAT_COLLECTION = 'chatrooms'
 
 export const SIDEBAR_KEY = 'LeftOpenDrawerSidebar'
-export const PAGE_LIMITS = [10, 20, 40]
+export const PAGE_LIMITS = [5, 10, 20, 40]

@@ -15,15 +15,13 @@ const GamesCardList = ({ templateId }) => {
   let [skip, $skip] = useValue(0)
   let [pages, $skips] = useValue(0)
   let [limit, $limit] = useValue(0)
-  let [template, $template] = useValue({})
   let [games, $games] = useValue([])
   let [loading, $loading] = useValue(false)
 
   useEffect(() => {
     $loading.set(true)
     const $obj = model.scope(`${TEMPLATES_COLLECTION}.${templateId}`)
-    $obj.fetchGames(skip).then(({ data, games, gamesCount, limit }) => {
-      $template.set(data)
+    $obj.fetchGames(skip).then(({ games, gamesCount, limit }) => {
       $games.set(games)
       $limit.set(limit)
       $skips.set(Math.ceil(gamesCount / limit))

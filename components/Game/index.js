@@ -10,6 +10,7 @@ import { BASE_URL } from '@env'
 
 import Chat from '../Chat'
 import QuestionList from '../QuestionList'
+import GameScores from '../GameScores'
 import { GAMES_COLLECTION, PLAYERS_COLLECTION, TEMPLATES_COLLECTION, ROUNDS_COLLECTION, PAGE_LIMITS } from '../../const/default'
 
 import './index.styl'
@@ -29,19 +30,17 @@ const Game = ({ match: { params }, history }) => {
   // GROUP
   const group = gameObj.groups.find(g => g.players.find(u => u.userId === userId)) || { players: [], rounds: [] }
 
-  console.debug('group', group)
-
-  const role = group.players.find(u => u.userId === userId)?.role
-
   // ROUNDS
   const queryRounds = { _id: { $in: group.rounds } }
-  console.debug('queryRounds', queryRounds)
+
+  // полные данные раундов
   const [roundsUnsorted] = useQuery(ROUNDS_COLLECTION, queryRounds)
   // текущий раунд
   let round = {}
   const rounds = []
   let finalFinishedRound = {}
   let roundIndex = 0
+  // id раундов в правильном порядке
   group.rounds.some((roundId, index) => {
     const _round = roundsUnsorted.find(r => r.id === roundId)
     rounds.push(_round)
@@ -83,11 +82,6 @@ const Game = ({ match: { params }, history }) => {
     `
   }
 
-  // сущность раунда? сохранить все ответы на вопросы по ролям.
-  // сохранить числовой результат по ролям
-  // questionsData[0]['роль']
-
-  const enemyId = gameObj && (gameObj.players[0] === userId ? gameObj.players[1] : gameObj.players[0])
   const youMoved = gameObj && round && round.movedPlayers && round.movedPlayers.includes(userId)
 
   const onJoin = () => {
@@ -104,44 +98,9 @@ const Game = ({ match: { params }, history }) => {
     }
   }
 
-  const onSelect = (type) => async () => {
-    // if (gameObj.finishedAt) return
-    // if (!gameObj.rounds[currentRoundIndex]) {
-    //   const newRoundId = uuid()
-    //   $round.createByFirstMove(newRoundId, gameObj.id, userId, enemyId, type)
-    //   // create new round
-    //   $gameObj.setEach({
-    //     rounds: [...gameObj.rounds, newRoundId]
-    //   })
-    // } else if (!round.finished) {
-    //   // add to exists round and count scores
-    //   const previousRoundId = currentRoundIndex > 0 && gameObj.rounds[currentRoundIndex - 1]
-    //   await $round.setSecondMove(roundId, userId, enemyId, type, previousRoundId)
-    // }
-  }
-
-  const onNextRound = () => {
-    // $currentRoundIndex.set(currentRoundIndex + 1)
-  }
-
-  // const renderType = type => {
-  //   const map = {
-  //     O: pug` Icon(icon=faHandRock)`,
-  //     V: pug` Icon(icon=faHandScissors)`,
-  //     I: pug` Icon(icon=faHandPaper)`,
-  //     C: pug` Icon(icon=faRunning)`
-  //   }
-  //   return map[type]
-  // }
 
   const onAnswer = (answers) => {
     if (gameObj.finishedAt) return
-
-    // groupId, template for roleindex etc.
-    // работа с записью в раунд ответов и подсчет на последнем ответе по формуле (достав все сохраненные ответы и подготовив)
-    console.debug('group', group)
-    console.debug('round.id', round.id)
-    console.debug('rounds', rounds)
     if (round && round.id) {
       const $round = model.scope(`${ROUNDS_COLLECTION}.${round.id}`)
       $round.saveToRound(round.id, template.template, userId, answers, rounds, roundIndex)
@@ -184,18 +143,8 @@ const Game = ({ match: { params }, history }) => {
                   if (round && round.finished)
                     Div.row
                       Span.headcell #{'Your move'}
-                      // Span.cell #{renderType(round.players[userId].type)}
                     Div.row
                       Span.headcell #{'Your opponent move'}
-                      // Span.cell #{renderType(round.players[enemyId].type)}
-                    // Div.result
-                    //   if (round.players[userId].score > round.players[enemyId].score)
-                    //     Span.win #{'YOU WIN!'}
-                    //   else if (round.players[userId].score < round.players[enemyId].score)
-                    //     Span.lose #{'YOU LOSE!'}
-                    //   else
-                    //     Span.draw #{'DRAW!'}
-                    //   Button.type(onClick=onNextRound) #{'NEXT'}
                   else
                     if youMoved
                       Div
@@ -204,10 +153,6 @@ const Game = ({ match: { params }, history }) => {
                     else
                       Div.questions
                         QuestionList(onAnswer=onAnswer template=template)
-                        // Button.type(onClick=onSelect('O') iconPosition='left') #{renderType('O')}
-                        // Button.type(onClick=onSelect('V') iconPosition='left') #{renderType('V')}
-                        // Button.type(onClick=onSelect('I') iconPosition='left') #{renderType('I')}
-                        // Button.capitulate(onClick=onSelect('C') iconPosition='left') #{renderType('C')}
                 Div.chat
                   Chat(id=group.chatId)
         Div.gameInfo
@@ -236,20 +181,7 @@ const Game = ({ match: { params }, history }) => {
           if (gameFinished)
             Div.row
               Span.headcell #{'Scores'}
-              Div
-                each r, rIndex in rounds
-                  Div(key=r.id)
-                    Span #{'Round #'}#{rIndex + 1}
-                    Div.row3
-                      Span.headcell #{'User'}
-                      Span.headcell #{'Score'}
-                      Span.headcell #{'ScoreAll'}
-                    each p in r.players
-                      Div.row3(key=p.userId)
-                        - const playerData = players.find(pd => pd.id === p.userId)
-                        Span.cell #{playerData.firstName} #{playerData.lastName}
-                        Span.cell #{r.scores[p.userId].score}
-                        Span.cell #{r.scores[p.userId].scoreAll}
+              GameScores(rounds=rounds, players=players)
   `
 }
 export default withRouter(observer(Game))

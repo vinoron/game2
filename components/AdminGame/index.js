@@ -6,6 +6,7 @@ import { withRouter } from 'react-router'
 import uuid from 'uuid'
 import { faHandRock, faHandScissors, faHandPaper, faRunning } from '@fortawesome/free-solid-svg-icons'
 import { BASE_URL } from '@env'
+import GameScores from '../GameScores'
 
 import { GAMES_COLLECTION, PLAYERS_COLLECTION, ROUNDS_COLLECTION, TEMPLATES_COLLECTION, CHAT_COLLECTION } from '../../const/default'
 
@@ -22,6 +23,22 @@ const AdminGame = ({ match: { params }, history }) => {
   // PLAYERS
   const query = { _id: { $in: gameObj.players } }
   const [players] = useQuery(PLAYERS_COLLECTION, query)
+
+  // ROUNDS FULL DATA BY EVERY GROUP
+  const roundIdsForAllGroups = gameObj.groups.reduce((acc, g) => [...acc, ...g.rounds], [])
+  const queryRounds = { _id: { $in: roundIdsForAllGroups }, finished: true }
+  const [roundsUnsortedFinished] = useQuery(ROUNDS_COLLECTION, queryRounds)
+  const roundsByGroup = []
+  // раунды разложенные по группам
+  gameObj.groups.forEach((g, groupIndex) => {
+    roundsByGroup.push([])
+    g.rounds.forEach((roundId) => {
+      const _round = roundsUnsortedFinished.find(r => r.id === roundId && r.finished)
+      if (_round) {
+        roundsByGroup[groupIndex].push(_round)
+      }
+    })
+  })
 
   // TEMPLATE
   const [template] = useDoc(TEMPLATES_COLLECTION, gameObj.templateId)
@@ -44,7 +61,6 @@ const AdminGame = ({ match: { params }, history }) => {
     if (gameObj.players.length > 0) {
       const groups = []
       let templateData = {}
-      console.debug('templateData', template)
       try {
         templateData = JSON.parse(template.template)
       } catch (e) {
@@ -64,7 +80,6 @@ const AdminGame = ({ match: { params }, history }) => {
       gameObj.players.forEach(userId => {
         groupPlayers.push({ userId, role: templateData.roles[roleIndex] })
         roleIndex++
-        console.debug('group.players.length', groupPlayers.length, rolesCount)
         if (groupPlayers.length === rolesCount) {
           group.players = [...groupPlayers]
           groups.push(group)
@@ -75,7 +90,6 @@ const AdminGame = ({ match: { params }, history }) => {
       })
       if (groupPlayers.length > 0) {
         // rejoin rest users
-        console.debug('drop users', groupPlayers)
         $gameObj.setEach({ players: gameObj.players.filter(p => !groupPlayers.find(item => item.userId === p)) })
       }
 
@@ -101,7 +115,11 @@ const AdminGame = ({ match: { params }, history }) => {
   }
 
   const onStartGame = async () => {
-    $gameObj.setEach({ startedAt: Date.now() })
+    $gameObj.start()
+  }
+
+  const onFinishGame = async () => {
+    $gameObj.finish()
   }
 
   return pug`
@@ -122,6 +140,7 @@ const AdminGame = ({ match: { params }, history }) => {
                 Button(onClick=onStartGame variant='flat') #{'Start game'}
               else
                 Span.gameStatus #{'GAME STARTED!'}
+                Button(onClick=onFinishGame variant='flat') #{'Finish game'}
         Div.gameInfo
           Div.row
             Span.headcell #{'Game Name'}
@@ -141,6 +160,9 @@ const AdminGame = ({ match: { params }, history }) => {
                         Div(key=playerData.userId)
                           - const player = players.find(p => p.id === playerData.userId)
                           Span #{playerIndex+1} #{player.firstName} #{player.lastName} (#{playerData.role})
+                    Div.rounds
+                      Div.finishMark(styleName=(roundsByGroup[groupIndex].length === group.rounds.length ? 'finished' : 'notFinished'))
+                      GameScores(rounds=roundsByGroup[groupIndex], players=players)
               else
                 each player in players
                   Div.row(key=player.id)

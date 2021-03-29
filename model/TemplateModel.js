@@ -27,6 +27,6 @@ export default class TemplateModel extends BaseModel {
     await $games.fetchAsync()
     const games = $games.get()
     const gamesCount = data.games.length
-    return { data, games, gamesCount, limit: GAMES_PAGE_LIMIT }
+    return { games, gamesCount, limit: GAMES_PAGE_LIMIT }
   }
 }

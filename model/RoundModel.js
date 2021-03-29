@@ -54,7 +54,6 @@ export default class RoundModel extends BaseModel {
         changedRoundValues.scores = {}
         result.forEach((res, resIndex) => {
           const userId = round.players[resIndex].userId
-          console.debug('res userId', userId)
           const lastScoreAll = currentRoundIndex > 0 ? rounds[currentRoundIndex - 1].scores[userId].scoreAll : 0
           // todo add additional equation to calc scoreAll?
           changedRoundValues.scores[userId] = { score: res, scoreAll: lastScoreAll + res }
@@ -64,7 +63,6 @@ export default class RoundModel extends BaseModel {
         console.log(err.message)
       }
     }
-    console.debug('changedRoundValues', changedRoundValues)
     return $round.setEachAsync(changedRoundValues)
   }
 
