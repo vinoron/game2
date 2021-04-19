@@ -1,12 +1,7 @@
-import React, { useCallback, useEffect, useState } from 'react'
-import { ImageBackground, TouchableOpacity } from 'react-native'
-import moment from 'moment'
-import { Div, Span, Icon, Row, Pagination, Select, Button, H3, Tag, Link, Avatar, Hr, TextInput, Multiselect } from '@startupjs/ui'
-import { observer, useValue, useQuery, useLocal, model } from '@startupjs/react-sharedb'
+import React, { useEffect } from 'react'
 import { withRouter } from 'react-router'
-import { faHandRock, faHandScissors, faHandPaper, faRunning } from '@fortawesome/free-solid-svg-icons'
-import { BASE_URL } from '@env'
-
+import { observer, useValue, model } from 'startupjs'
+import { Div, Span, Row, Pagination } from '@startupjs/ui'
 import { TEMPLATES_COLLECTION } from '../../const/default'
 
 import './index.styl'

@@ -1,7 +1,6 @@
 import React from 'react'
+import { useLocal } from 'startupjs'
 import { Div } from '@startupjs/ui'
-import { useLocal } from '@startupjs/react-sharedb'
-
 import PageSlogan from 'components/PageSlogan'
 import GameList from 'components/GameList'
 

@@ -1,11 +1,8 @@
-import React, { useCallback, useEffect, useState } from 'react'
-import { ImageBackground, TouchableOpacity } from 'react-native'
-import { Icon, Alert, Div, Span, Row, Pagination, Select, Button, H3, Tag, Link, Avatar, Hr, TextInput, Multiselect } from '@startupjs/ui'
-import { observer, useValue, useQuery, useLocal, useDoc, model } from '@startupjs/react-sharedb'
+import React from 'react'
 import { withRouter } from 'react-router'
+import { observer, useValue, useQuery, useLocal, useDoc, model } from 'startupjs'
+import { Div, Span, Button } from '@startupjs/ui'
 import uuid from 'uuid'
-import { faHandRock, faHandScissors, faHandPaper, faRunning } from '@fortawesome/free-solid-svg-icons'
-import { BASE_URL } from '@env'
 import GameScores from '../GameScores'
 
 import { GAMES_COLLECTION, PLAYERS_COLLECTION, ROUNDS_COLLECTION, TEMPLATES_COLLECTION, CHAT_COLLECTION } from '../../const/default'
@@ -13,8 +10,6 @@ import { GAMES_COLLECTION, PLAYERS_COLLECTION, ROUNDS_COLLECTION, TEMPLATES_COLL
 import './index.styl'
 
 const AdminGame = ({ match: { params }, history }) => {
-  const [skip, $skip] = useValue(0)
-  const [userId] = useLocal('_session.userId')
   const [alertMessage, $alertMessage] = useValue('')
 
   // GAME DATA
@@ -90,7 +85,7 @@ const AdminGame = ({ match: { params }, history }) => {
       })
       if (groupPlayers.length > 0) {
         // rejoin rest users
-        $gameObj.setEach({ players: gameObj.players.filter(p => !groupPlayers.find(item => item.userId === p)) })
+        $gameObj.set('players', gameObj.players.filter(p => !groupPlayers.find(item => item.userId === p)))
       }
 
       // create chatrooms for groups

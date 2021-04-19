@@ -1,6 +1,6 @@
 import React from 'react'
+import { observer, useDoc, useSession } from 'startupjs'
 import { Div } from '@startupjs/ui'
-import { observer, useDoc, useLocal, useValue } from '@startupjs/react-sharedb'
 
 import PageSlogan from 'components/PageSlogan'
 import GameList from 'components/GameList'
@@ -10,7 +10,7 @@ import { PLAYERS_COLLECTION } from '../../../const/default'
 import './index.styl'
 
 const PPastGames = () => {
-  const [userId] = useLocal('_session.userId')
+  const [userId] = useSession('userId')
   const [player] = useDoc(PLAYERS_COLLECTION, userId)
 
   if (!player) {

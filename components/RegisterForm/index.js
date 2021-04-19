@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { Platform } from 'react-native'
 import { observer, useValue } from 'startupjs'
-import { Div, Span, Br, Button, Checkbox } from '@startupjs/ui'
+import { Div, Span, Br, Button, Checkbox, Row } from '@startupjs/ui'
 import { finishAuth } from '@startupjs/auth'
 import { FORM_REGEXPS } from '@startupjs/auth-local/isomorphic'
 import { SIGN_IN_SLIDE, SIGN_UP_SLIDE } from '@startupjs/auth/isomorphic'
@@ -110,7 +110,7 @@ function RegisterForm ({
   }
 
   useEffect(() => {
-    if (config && config.formState) $form.setEach({...config.formState})
+    if (config && config.formState) $form.setEach({ ...config.formState })
     if (isWeb) {
       listenKeypress()
     }
@@ -176,7 +176,7 @@ function RegisterForm ({
         color='primary'
       ) Sign Up
       Br
-      Div.line
+      Row.line
         Span.text Have an account?
         Button.button(
           onPress=onLogin

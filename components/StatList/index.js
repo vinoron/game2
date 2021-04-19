@@ -1,8 +1,7 @@
 import React, { useEffect } from 'react'
 import { withRouter } from 'react-router'
+import { observer, useValue, model } from 'startupjs'
 import { Div, Span, Row, Pagination } from '@startupjs/ui'
-import { observer, useValue, model } from '@startupjs/react-sharedb'
-
 import GameScores from 'components/GameScores'
 import { GAMES_COLLECTION } from '../../const/default'
 import './index.styl'

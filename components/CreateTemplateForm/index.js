@@ -1,7 +1,7 @@
 import React, { useCallback } from 'react'
 import { withRouter } from 'react-router'
+import { useValue, useDoc, observer, useLocal } from 'startupjs'
 import { Div, Span, TextInput, Button } from '@startupjs/ui'
-import { useValue, useDoc, observer, useLocal } from '@startupjs/react-sharedb'
 import Title from 'components/Title'
 import { TEMPLATES_COLLECTION } from '../../const/default'
 import './index.styl'
@@ -30,7 +30,7 @@ const CreateTemplateForm = ({ match: { params }, history }) => {
   const [formData, $formData] = useValue(params.templateId ? { ...template } : {})
   const onSetFormValue = useCallback(
     (key) => (value) => {
-      $formData.setEach({ [key]: value })
+      $formData.set(key, value)
     }, [])
 
   const onSave = async () => {

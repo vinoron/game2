@@ -1,7 +1,7 @@
 import React from 'react'
 import { withRouter } from 'react-router'
+import { observer, useValue, useQuery, useSession } from 'startupjs'
 import { Div, Span, Row, Pagination, Select, Button } from '@startupjs/ui'
-import { observer, useValue, useQuery, useLocal } from '@startupjs/react-sharedb'
 import moment from 'moment'
 
 import StatList from 'components/StatList'
@@ -10,7 +10,7 @@ import { GAMES_COLLECTION, PAGE_LIMITS } from '../../const/default'
 import './index.styl'
 
 const GameList = ({ mode = 'user', active = true, history }) => {
-  const [userId] = useLocal('_session.userId')
+  const [userId] = useSession('userId')
   let [skip, $skip] = useValue(0)
   let [limit, $limit] = useValue(PAGE_LIMITS[0])
   let [openedStatGameId, $openedStatGameId] = useValue(0)

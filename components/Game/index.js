@@ -1,12 +1,9 @@
-import React, { useCallback, useEffect, useState } from 'react'
-import { ImageBackground, TouchableOpacity } from 'react-native'
-import { Icon, Alert, Div, Span, Row, Pagination, Select, Button, H3, Tag, Avatar, Hr, TextInput, Multiselect } from '@startupjs/ui'
-import { observer, useValue, useQuery, useLocal, useDoc, model } from '@startupjs/react-sharedb'
+import React from 'react'
 import { withRouter } from 'react-router'
-import uuid from 'uuid'
+import { observer, useValue, useQuery, useSession, useDoc, model } from 'startupjs'
+import { Div, Span, Button } from '@startupjs/ui'
+
 import _ from 'lodash'
-import { faHandRock, faHandScissors, faHandPaper, faRunning } from '@fortawesome/free-solid-svg-icons'
-import { BASE_URL } from '@env'
 
 import Chat from '../Chat'
 import QuestionList from '../QuestionList'
@@ -16,7 +13,7 @@ import { GAMES_COLLECTION, PLAYERS_COLLECTION, TEMPLATES_COLLECTION, ROUNDS_COLL
 import './index.styl'
 
 const Game = ({ match: { params }, history }) => {
-  const [userId] = useLocal('_session.userId')
+  const [userId] = useSession('userId')
   const [alertMessage, $alertMessage] = useValue('')
   const [loading, $loading] = useValue(false)
 
@@ -90,11 +87,11 @@ const Game = ({ match: { params }, history }) => {
       return
     }
     if (gameObj.players.length === 0) {
-      $gameObj.setEach({ players: [userId] })
+      $gameObj.set('players', [userId])
       return
     }
     if (gameObj.players.length > 0) {
-      $gameObj.setEach({ players: [...gameObj.players, userId] })
+      $gameObj.set('players', [...gameObj.players, userId])
     }
   }
 

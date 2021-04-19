@@ -1,7 +1,7 @@
 import React from 'react'
 import { withRouter } from 'react-router'
+import { observer, useLocal } from 'startupjs'
 import { Div, Button } from '@startupjs/ui'
-import { observer, useLocal } from '@startupjs/react-sharedb'
 import PageSlogan from 'components/PageSlogan'
 import GameList from 'components/GameList'
 import './index.styl'

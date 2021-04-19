@@ -1,7 +1,7 @@
 import React from 'react'
+import { useValue, observer } from 'startupjs'
 import { Div, Span, TextInput, Select, Button } from '@startupjs/ui'
-import { useValue, useDoc, observer, useLocal, useQuery } from '@startupjs/react-sharedb'
-import { CHAT_COLLECTION, PLAYERS_COLLECTION } from '../../const/default'
+
 import './index.styl'
 
 const QuestionList = ({ onAnswer, template }) => {

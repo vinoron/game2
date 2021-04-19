@@ -1,18 +1,18 @@
 import React, { useCallback } from 'react'
 import { withRouter } from 'react-router'
+import { useValue, useDoc, observer, useLocal } from 'startupjs'
 import { Div, TextInput, Button } from '@startupjs/ui'
-import { useValue, useDoc, observer, useLocal } from '@startupjs/react-sharedb'
 import Title from 'components/Title'
 import { GAMES_COLLECTION } from '../../const/default'
 import './index.styl'
 
 const CreateGameForm = ({ match: { params }, id, history }) => {
-  const [game, $game] = useDoc(GAMES_COLLECTION, id)
+  const [game = {}, $game] = useDoc(GAMES_COLLECTION, id)
   const [user] = useLocal('_session.user')
-  const [formData, $formData] = useValue(id ? { ...game } : {})
+  const [formData, $formData] = useValue({ ...game })
   const onSetFormValue = useCallback(
     (key) => (value) => {
-      $formData.setEach({ [key]: value })
+      $formData.set(key, value)
     }, [])
 
   const onSave = async () => {

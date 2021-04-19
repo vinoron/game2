@@ -1,14 +1,12 @@
 import React from 'react'
 import { withRouter } from 'react-router'
+import { observer, useValue, useQuery } from 'startupjs'
 import { Div, Span, Row, Pagination, Select, Button } from '@startupjs/ui'
-import { observer, useValue, useQuery, useLocal } from '@startupjs/react-sharedb'
-
 import GamesCardList from 'components/GamesCardList'
 import { TEMPLATES_COLLECTION, PAGE_LIMITS } from '../../const/default'
 import './index.styl'
 
 const TemplateList = ({ history }) => {
-  const [userId] = useLocal('_session.userId')
   let [skip, $skip] = useValue(0)
   let [limit, $limit] = useValue(PAGE_LIMITS[0])
   let [openedTemplateId, $openedTemplateId] = useValue(0)
