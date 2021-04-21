@@ -1,0 +1,35 @@
+.root
+  background-color $color-bg-main
+  font-family 'Helvetica, sans-serif'
+  padding 0
+  min-width 125u
+
+.content
+  width 100%
+  margin 0 auto
+  height 125u
+  +desktop()
+    max-width 123u
+  +wide()
+    max-width 141u
+
+.sidebarLine
+  padding 1u
+  +desktop()
+    padding 0
+
+.bg
+  flex 1
+  flex-direction column
+  justify-content flex-start
+  width 100%
+  height 100%
+
+.bgImage
+  opacity 0.4
+
+.bars
+  background-color transparent
+  margin-left 1u
+  +desktop()
+    margin-left 0

@@ -1,5 +1,7 @@
 import { BASE_URL } from '@env'
-import init from 'startupjs/init'
+import init from '@startupjs/init'
+import { initAuthApp } from '@startupjs/auth'
+import * as localForms from './appAuthForms'
 import orm from '../model'
 import React from 'react'
 import App from 'startupjs/app'
@@ -7,7 +9,14 @@ import { observer, model } from 'startupjs'
 import { Platform } from 'react-native'
 
 // Frontend micro-services
-import * as main from '../main'
+import * as playerApp from '../appPlayer'
+import * as adminApp from '../appAdmin'
+
+const authApp = initAuthApp({
+  localForms
+})
+// change default register page + proffesor field
+// authApp.routes = authApp.routes.filter(item => item.path !== '/auth/sign-up')
 
 if (Platform.OS === 'web') window.model = model
 
@@ -20,7 +29,7 @@ init({ baseUrl: BASE_URL, orm })
 export default observer(() => {
   return pug`
     App(
-      apps={main}
+      apps={authApp, playerApp, adminApp}
     )
   `
 })

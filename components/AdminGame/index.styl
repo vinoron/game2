@@ -1,0 +1,52 @@
+.root
+  width 100%
+  flex-direction column
+  padding 0 1u
+
+.game
+  padding 1u
+
+.capitulate
+  margin-left 2u
+
+.gameInfo
+  margin-top 1u
+  width 100%
+  border-top 1px solid $color-gray
+  border-right 1px solid $color-gray
+
+.warning
+  color $color-red
+
+.row
+  display grid
+  grid-template-columns 1fr 4fr
+  border-bottom 1px solid $color-gray
+
+.cell, .headcell
+  padding 1u
+  border-left 1px solid $color-gray
+
+.headcell
+  font-weight bold
+
+.result
+  margin-top 1u
+  font-size 20px
+  font-weight bold
+
+.gameStatus
+  font-size 20px
+  font-weight bold
+
+.finishMark
+  width 2u
+  height 2u
+  border 1px solid $color-gray
+  border-radius 2u
+
+.finished
+  background-color $color-green
+
+.notFinished
+  background-color $color-red
